@@ -1,0 +1,70 @@
+question 1: Which artist is writing the most rock music?
+
+
+SQL:
+SELECT Artist.ArtistId, Artist.Name, COUNT(Track.TrackId) as TotalRockSongs
+  FROM Track JOIN Genre JOIN Album JOIN Artist
+  ON Track.GenreId = Genre.GenreId
+  AND Track.AlbumId = Album.AlbumId
+  AND Album.ArtistId = Artist.ArtistId
+  AND Genre.Name = 'Rock'
+  GROUP BY Artist.Name
+  ORDER BY TotalRockSongs DESC
+  LIMIT 10
+
+  
+  
+question 2: What is the most popular music genre in each country?
+
+SQL:
+WITH a AS (
+      SELECT SUM(InvoiceLine.Quantity) AS Quantity, Invoice.BillingCountry, Genre.Name AS Genre
+      FROM InvoiceLine JOIN Invoice JOIN Genre JOIN Track
+      ON Track.GenreId = Genre.GenreId
+      AND Invoice.InvoiceId = InvoiceLine.InvoiceId
+      AND InvoiceLine.TrackId = Track.TrackId
+      GROUP BY 2,3),
+      b AS (
+          SELECT MAX(Quantity) AS Quantity, BillingCountry, Genre
+          FROM a
+          GROUP BY BillingCountry)
+        
+  SELECT a.Quantity, a.BillingCountry, a.Genre
+  FROM a JOIN b
+  ON a.Quantity = b.Quantity
+  AND a.BillingCountry = b.BillingCountry
+  
+  
+  
+Question 3: Who is the best customer?
+
+SQL:
+  SELECT Customer.FirstName, Customer.LastName, Invoice.CustomerId, SUM(Invoice.Total) as TotalSpent
+  FROM Customer JOIN Invoice
+  ON Customer.CustomerId = Invoice.CustomerId
+  GROUP BY Invoice.CustomerId
+  ORDER BY TotalSpent DESC
+  LIMIT 5
+  
+  
+  
+  
+Question 4: Which customer spent the most on music in each country?
+
+SQL:
+WITH a AS (
+        SELECT Invoice.BillingCountry, SUM(Total) AS TotalSpent, Customer.FirstName, Customer.LastName, Customer.CustomerId
+        FROM Invoice JOIN Customer
+        ON Invoice.CustomerId = Customer.CustomerId
+        GROUP BY Customer.CustomerId
+        ORDER BY Invoice.BillingCountry),
+    b AS (
+        SELECT BillingCountry, MAX(TotalSpent) AS MaxTotalSpent
+        FROM a
+        GROUP BY BillingCountry)
+        
+SELECT a.BillingCountry, a.TotalSpent, a.FirstName, a.LastName, a.CustomerId
+FROM a JOIN b
+ON a.TotalSpent = b.MaxTotalSpent
+AND a.BillingCountry = b.BillingCountry
+  
